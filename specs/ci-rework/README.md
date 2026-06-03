@@ -745,6 +745,26 @@ support drop**:
 **Files changed:** `scripts/ci/test.sh`, `scripts/ci/_lib.sh`,
 `.github/workflows/release.yml` (matrix 42 → 15 slots), `README.md`.
 
+**Follow-up (2026-06-02 re-run) — Root cause 3: dbt-core prerelease leak.**
+After the above shipped, the re-run was nearly green (14/16) but
+`snowflake 1.10` and `bigquery 1.10` failed fast at `dbt clean`. Cause:
+the version-pinned tox envs pinned only the **adapter**
+(`dbt-snowflake~=1.10.0`) and let `dbt-core` float. With a
+`dbt-core==2.0.0a1` prerelease now on PyPI, the 1.10 adapter's loose
+dbt-core dependency resolved to that alpha (verified:
+`pip install --dry-run 'dbt-snowflake~=1.10.0'` → `dbt-core 2.0.0a1`),
+which is incompatible with the 1.10 adapter — `dbt clean` printed
+success but exited 1. Postgres 1.10 was unaffected because its env
+already pinned `dbt-core~=1.10.0`. **Fix:** pin `dbt-core` to the
+matching minor in every versioned snowflake/bigquery env (1.9/1.10/1.11),
+mirroring the postgres pattern (`pip install --dry-run 'dbt-core~=1.10.0'
+'dbt-snowflake~=1.10.0'` → `dbt-core 1.10.22`). The unversioned "latest"
+envs are intentionally left to float (their `<2.0.0` adapter cap keeps
+core on stable 1.11.x today, and letting them eventually surface a real
+dbt 2.0 break is the early-warning we want). Databricks versioned envs
+have the same latent issue but are stubbed/not-run; apply the same pin
+when Databricks is reactivated. **Files changed:** `tox.ini`.
+
 ---
 
 #### 12.3.1. Drop EOL dbt versions — original plan (see 12.3.0 for what shipped)
