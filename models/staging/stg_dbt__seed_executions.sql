@@ -1,6 +1,5 @@
 with
     base as (select * from {{ ref("seed_executions") }}),
-
     enhanced as (
 
         select
@@ -30,3 +29,4 @@ with
 
 select *
 from enhanced
+

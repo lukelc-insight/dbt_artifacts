@@ -22,7 +22,9 @@ with
             , url
             , package_name
             , depends_on_nodes
-            , tags
+            {%- if target.type != 'fabricspark' %}
+            , tags 
+            {%- endif %}
         from base
 
     )

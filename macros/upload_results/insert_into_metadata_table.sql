@@ -22,6 +22,10 @@
 
 {%- endmacro %}
 
+{% macro fabricspark__insert_into_metadata_table(relation, fields, content) -%}
+        {{ return(dbt_artifacts.spark__insert_into_metadata_table(relation, fields, content)) }}
+{%- endmacro %}
+
 {% macro snowflake__insert_into_metadata_table(relation, fields, content) -%}
 
     {% set insert_into_table_query %}

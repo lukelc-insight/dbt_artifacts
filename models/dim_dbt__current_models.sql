@@ -1,12 +1,10 @@
 with
     base as (select * from {{ ref("stg_dbt__models") }}),
-
     model_executions as (select * from {{ ref("stg_dbt__model_executions") }}),
-
     latest_models as (
 
         {# Retrieves the models present in the most recent run #}
-        select * from base where run_started_at = (select max(b.run_started_at) from base as b)
+        select * from base where run_started_at = (select max(run_started_at) from base)
 
     ),
 
@@ -16,7 +14,11 @@ with
         recent run and ranks them based on query completion time #}
         select
             model_executions.node_id,
+            {% if target.type == 'fabricspark' %}
+            CAST(model_executions.was_full_refresh AS BOOLEAN),
+            {% else %}
             model_executions.was_full_refresh,
+            {% endif %}
             model_executions.query_completed_at,
             model_executions.total_node_runtime,
             model_executions.rows_affected
@@ -134,3 +136,4 @@ with
 
 select *
 from final
+

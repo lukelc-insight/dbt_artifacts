@@ -13,3 +13,7 @@
 {% macro spark__column_identifier(column_index) -%}
     col{{ column_index }}
 {%- endmacro %}
+
+{% macro fabricspark__column_identifier(column_index) -%}
+    {{ return(dbt_artifacts.spark__column_identifier(column_index)) }}
+{%- endmacro %}

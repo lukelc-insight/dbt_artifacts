@@ -1,6 +1,5 @@
 with
     base as (select * from {{ ref("sources") }}),
-
     enhanced as (
 
         select
@@ -27,3 +26,4 @@ with
 
 select *
 from enhanced
+
