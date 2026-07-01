@@ -1,15 +1,25 @@
-{% macro insert_into_metadata_table(dataset, fields, content) -%}
+{% macro insert_into_metadata_table(dataset, fields, content, truncate=false) -%}
 
     {% if content != "" %}
 
         {# Get the relation that the results will be uploaded to #}
         {% set dataset_relation = dbt_artifacts.get_relation(dataset) %}
+
+        {# Optionally truncate the table before inserting #}
+        {% if truncate %}
+            {% set truncate_query %}
+                truncate table {{ dataset_relation }}
+            {% endset %}
+            {% do run_query(truncate_query) %}
+        {% endif %}
+
         {# Insert the data into the table #}
         {{ return(adapter.dispatch('insert_into_metadata_table', 'dbt_artifacts')(dataset_relation, fields, content)) }}
 
     {% endif %}
 
 {%- endmacro %}
+
 
 {% macro spark__insert_into_metadata_table(relation, fields, content) -%}
 

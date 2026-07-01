@@ -10,6 +10,9 @@
             {% set datasets_to_load = ['model_executions', 'seed_executions', 'test_executions', 'snapshot_executions'] + datasets_to_load %}
         {% endif %}
 
+        {# Datasets that should be truncated on full refresh #}
+        {% set truncate_on_full_refresh = ['exposures', 'seeds', 'snapshots', 'invocations', 'sources', 'tests', 'models'] %}
+
         {# Upload each data set in turn #}
         {% for dataset in datasets_to_load %}
 
@@ -31,11 +34,12 @@
                 {# Get just the objects to load on this loop #}
                 {% set content = dbt_artifacts.get_table_content_values(dataset, objects[i: i + upload_limit]) %}
 
-                {# Insert the content into the metadata table #}
+                {# Insert the content into the metadata table, truncating first if full refresh is set for this dataset #}
                 {{ dbt_artifacts.insert_into_metadata_table(
                     dataset=dataset,
                     fields=dbt_artifacts.get_column_name_list(dataset),
-                    content=content
+                    content=content,
+                    truncate=(i == 0 and dataset in truncate_on_full_refresh)
                     )
                 }}
 
